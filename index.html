@@ -53,7 +53,7 @@
 	height: 10px;
 	width: 10px;
 	margin-left:-18px;
-	margin-right:10px;
+	
 	background-image: url("/listOpen.png");
 	background-repeat: no-repeat;
 	background-position: left center;
@@ -67,7 +67,7 @@
 	height: 10px;
 	width: 10px;
 	margin-left:-18px;
-	margin-right:10px;
+	
 	background-image: url("/listClosed.png");
 	background-repeat: no-repeat;
 	background-position: left center;
@@ -236,7 +236,7 @@ function fixPath(path){
 }
 function printChildren(obj){
 	if(obj.children != undefined){
-		var str = "<li class='folder'><a class='folderImage closed'>" + obj.name + " </a><input class='delButton' type='button' value='delete' onclick='javascript:deleteFile(\"" + fixPath(obj.path + "/") + "\")'</input> </li></br><ul class='folderHolder' style='display:none;'>"
+		var str = "<li class='folder'><a class='folderImage closed'>&nbsp;&nbsp;" + obj.name + " </a><input class='delButton' type='button' value='delete' onclick='javascript:deleteFile(\"" + fixPath(obj.path + "/") + "\")'</input> </li></br><ul class='folderHolder' style='display:none;'>"
 		for(var c = 0; c<obj.children.length; c++){
 			str += printChildren(obj.children[c])
 		}
