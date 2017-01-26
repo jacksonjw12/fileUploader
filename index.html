@@ -1,0 +1,287 @@
+<html>
+<body>
+<button id="fileSelect">Select Files</button><button id="folderSelect">Select Folders</button>
+<input id="upload-input" type="file" name="uploads[]" value="Choose files" multiple="multiple">
+<input id="upload-input-directory" name="uploads[]" type="file" id="filepicker" name="fileList" webkitdirectory multiple />
+
+<input onclick="javascript:upload()" type="button" value="Upload!">
+</br>
+
+
+<div id="fileViewer" >
+
+</div>
+<div class="listingHolder">
+	<ul id="listing"></ul>
+
+</body>
+<style>
+#upload-input {
+	display:none;
+}
+#upload-input-directory {
+	display:none;
+}
+.listingHolder{
+	position:absolute;
+	right:10%;
+	/*margin-left: 608px;*/
+	max-height:200px;
+	overflow-y:scroll;
+	/*display:block;*/
+	width:30%;
+	/*border:1px solid black;*/
+
+}
+#fileViewer{
+	position:absolute;
+	left:5px;
+	width:60%;
+	border:1px solid black;
+}
+.delButton{
+	float:right;
+	margin-right:300px;
+}
+.folder {
+	list-style: none;
+}
+.folderImage:not(.closed):before   {
+	content: '';
+	display: inline-block;
+	height: 10px;
+	width: 10px;
+	margin-left:-18px;
+	margin-right:10px;
+	background-image: url("/listOpen.png");
+	background-repeat: no-repeat;
+	background-position: left center;
+	background-size: 10px;
+
+}
+.closed:before{
+	content: '';
+	display: inline-block;
+	height: 10px;
+	width: 10px;
+	margin-left:-18px;
+	margin-right:10px;
+	background-image: url("/listClosed.png");
+	background-repeat: no-repeat;
+	background-position: left center;
+	background-size: 10px;
+
+}
+
+li:hover{
+	background-color:#d3d3d3;
+}
+.folderholder:active{
+	/*background-color:blue;*/
+}
+.folderImage:active{
+	background-color:green;
+}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+<script>
+
+
+// $('.folderholder').click(function() {
+// 	    console.log(123)
+
+//     $(this).parent().children('UL').toggle('closed');
+   
+// });
+
+
+
+document.getElementById("fileSelect").addEventListener("click", function (e) {
+	document.getElementById("upload-input").click();
+	e.preventDefault(); // prevent navigation to "#"
+}, false);
+document.getElementById("folderSelect").addEventListener("click", function (e) {
+	document.getElementById("upload-input-directory").click();
+	//e.preventDefault(); // prevent navigation to "#"
+}, false);
+
+
+document.getElementById("upload-input-directory").addEventListener("change", function(event) {
+	let output = document.getElementById("listing");
+	let files = event.target.files;
+
+	for (let i=0; i<files.length; i++) {
+		
+		let item = document.createElement("li");
+		item.innerHTML = files[i].webkitRelativePath;
+		output.appendChild(item);
+		
+
+	};
+}, false);
+
+document.getElementById("upload-input").addEventListener("change", function(event) {
+	let output = document.getElementById("listing");
+	let files = event.target.files;
+
+	for (let i=0; i<files.length; i++) {
+		if(validFile(files[i].name)){
+			let item = document.createElement("li");
+			item.innerHTML = files[i].name;
+			output.appendChild(item);
+		}
+
+	};
+}, false);
+
+
+
+function validFile(name){
+	return true;
+	var hasDot = false
+	for(var i = name.length; i> -1;i--){
+		if(name.charAt(i) == "."){
+			if(hasDot){
+				return false;
+			}
+			else{
+				hasDot = true
+			}
+		}
+		else if(name.charAt(i) == "/"){
+			if(hasDot){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+	}
+}
+
+
+
+function upload(){
+	var files = $('#upload-input').get(0).files;
+	var directoryFiles = $('#upload-input-directory').get(0).files
+	console.log(files)
+	if (files.length > 0 || directoryFiles.length > 0){
+		// One or more files selected, process the file upload
+
+		// create a FormData object which will be sent as the data payload in the
+		// AJAX request
+		var formData = new FormData();
+
+		// loop through all the selected files
+		for (var i = 0; i < files.length; i++) {
+			var file = files[i];
+			
+
+			formData.append('uploads[]', file, file.path);
+		}
+		for (var j = 0; j < directoryFiles.length; j++) {
+			var file = directoryFiles[j];
+
+			// add the files to formData object for the data payload
+			//console.log(file.webkitRelativePath	)
+
+			formData.append('uploads[]', file, file.webkitRelativePath);
+		}
+
+
+		$.ajax({
+		url: '/upload',
+		type: 'POST',
+		data: formData,
+		processData: false,
+		contentType: false,
+		success: function(data){
+			console.log('upload successful!');
+			document.getElementById("upload-input").value = "";
+			document.getElementById("upload-input-directory").value = "";
+			document.getElementById("listing").innerHTML = "";
+
+			setup();
+		}
+	});
+	}
+
+	
+}
+function deleteFile(name){
+	console.log(name)
+	$.ajax({
+		url: '/deleteFile',
+		type: 'post',
+		data: JSON.stringify({"fileName":name}),
+		dataType: 'json',
+		contentType: 'application/json',
+		complete: function(data){
+			console.log("file deleted: " + name);
+			setup();
+		},
+		error: function(){
+			console.log(123)
+		}
+	});
+}
+function fixPath(path){
+	return path.substring(8);
+}
+function printChildren(obj){
+	if(obj.children != undefined){
+		var str = "<li class='folder'><a class='folderImage closed'>" + obj.name + " </a><input class='delButton' type='button' value='delete' onclick='javascript:deleteFile(\"" + fixPath(obj.path + "/") + "\")'</input> </li></br><ul class='folderHolder' style='display:none;'>"
+		for(var c = 0; c<obj.children.length; c++){
+			str += printChildren(obj.children[c])
+		}
+		return str + "</ul>"
+	}
+	else if(obj.extension.length > 0){
+
+		return "<li><a href='/" + fixPath(obj.path) + "'>" + obj.name + "</a> <input class='delButton' type='button' value='delete' onclick='javascript:deleteFile(\"" + fixPath(obj.path) + "\")'</input> </li></br>";
+	}
+	else{
+		return ""
+	}
+}
+
+function setup(){
+	$.ajax({
+		url: '/getFileNames',
+		type: 'get',
+		data: {},
+		processData: false,
+		contentType: false,
+		success: function(data){
+			var d = document.getElementById('fileViewer');
+			var string = "<ul>"
+			//console.log(JSON.stringify(data.files,null,2))
+			for(var c = 0; c<data.files.length;c++){
+				string+= printChildren(data.files[c])
+			}
+			//string = p;
+			//for(var f = 0; f<data.files.length; f++){
+				//string+= "<li><a href='/" + data.files[f] + "'>" + data.files[f] + "</a> <input style='float:right;' type='button' value='delete' onclick='javascript:deleteFile(\"" + data.files[f] + "\")'</input> </li></br>"
+
+
+			//}
+
+			string+= "</ul>"
+			d.innerHTML = string;
+			$( ".folderImage" ).click( function() {
+	  			console.log(123)
+	  			 $( this ).toggleClass('closed')
+	  			 console.log($(this).parent())
+	  			 $(this).parent().next().next().toggle('closed');
+			});
+
+		}
+	});
+
+}
+setup();
+
+</script>
+</html>
