@@ -14,19 +14,34 @@ function start() {
 	app = express();
 	var bodyParser = require('body-parser')
 	// app.use(express.bodyParser());
-	app.use(bodyParser.json());
 	
-	app.use(cors());
 
-	app.all('/*', function(req, res, next) {
-	    res.header('Access-Control-Allow-Origin', '*');
+
+	
+	app.use(bodyParser.json());
+
+	//app.use(cors());
+	//app.use(allowCrossDomain);
+
+	app.use(express.static(__dirname + '/statics'));
+	app.use(express.static(__dirname + '/uploads'));//, {setHeaders:function(res,path){
+		//allowCrossDomain(res,path)
+	//}});
+
+
+
+	app.use(function(req, res, next) {
+		res.header('Access-Control-Allow-Origin', "*");
+
+		res.header('Access-Control-Allow-Headers', 'Content-Type');
+	    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+
 	    next();
 	});
 
 
 
-	app.use(express.static(__dirname + '/statics'));
-	app.use(express.static(__dirname + '/uploads'));
+	
 
 	
 
