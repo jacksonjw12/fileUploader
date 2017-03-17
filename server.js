@@ -6,6 +6,8 @@ var fs = require('fs')
 var mkdirp = require('mkdirp');
 var dirTree = require('directory-tree');
 var rmdir = require('rmdir');
+var cors = require('cors')
+
 function start() {
 
 	var express = require('express');
@@ -14,9 +16,7 @@ function start() {
 	// app.use(express.bodyParser());
 	app.use(bodyParser.json());
 	
-	app.use(function(req, res, next) {
-		res.header("Access-Control-Allow-Origin", "*");
-	});
+	app.use(cors());
 
 	app.use(express.static(__dirname + '/statics'));
 	app.use(express.static(__dirname + '/uploads'));
